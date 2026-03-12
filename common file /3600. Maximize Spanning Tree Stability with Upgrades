@@ -21,8 +21,8 @@ public:
         if(a==b) return false;
 
         if(rank[a]<rank[b]) swap(a,b);
-
         parent[b]=a;
+
         if(rank[a]==rank[b]) rank[a]++;
 
         return true;
@@ -35,23 +35,25 @@ public:
     bool can(int n, vector<vector<int>>& edges, int k, int mid){
 
         DSU dsu(n);
-        int upgrades = 0;
-        int used = 0;
+        int upgrades=0, used=0;
+
+        vector<vector<int>> optional;
 
         for(auto &e:edges){
-            int u=e[0],v=e[1],s=e[2],must=e[3];
-
-            if(must){
-                if(s<mid) return false;
-
-                if(dsu.unite(u,v)) used++;
+            if(e[3]==1){
+                if(e[2] < mid) return false;
+                if(dsu.unite(e[0],e[1])) used++;
                 else return false;
+            }else{
+                optional.push_back(e);
             }
         }
 
-        for(auto &e:edges){
-            int u=e[0],v=e[1],s=e[2],must=e[3];
-            if(must) continue;
+        sort(optional.begin(), optional.end(),
+             [](auto &a, auto &b){ return a[2] > b[2]; });
+
+        for(auto &e:optional){
+            int u=e[0], v=e[1], s=e[2];
 
             if(dsu.find(u)==dsu.find(v)) continue;
 
@@ -59,12 +61,10 @@ public:
                 dsu.unite(u,v);
                 used++;
             }
-            else if(2*s>=mid){
-                if(upgrades<k){
-                    upgrades++;
-                    dsu.unite(u,v);
-                    used++;
-                }
+            else if(2*s>=mid && upgrades<k){
+                upgrades++;
+                dsu.unite(u,v);
+                used++;
             }
 
             if(used==n-1) return true;
@@ -75,7 +75,7 @@ public:
 
     int maxStability(int n, vector<vector<int>>& edges, int k) {
 
-        int left=0,right=2e5;
+        int left=0, right=200000;
         int ans=-1;
 
         while(left<=right){
@@ -84,8 +84,9 @@ public:
             if(can(n,edges,k,mid)){
                 ans=mid;
                 left=mid+1;
+            }else{
+                right=mid-1;
             }
-            else right=mid-1;
         }
 
         return ans;
